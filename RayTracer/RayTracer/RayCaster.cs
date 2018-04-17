@@ -7,7 +7,7 @@ namespace RayTracer
         public float x, y, z;
         public float length => (float)Math.Sqrt(x * x + y * y + z * z);
         public Vector3(float a, float b, float c) { this.x = a; this.y = b; this.z = c; }
-        public void Normalize() { x /= length; y /= length; z /= length; }
+        public void Normalize() { float inv = 1f / length;  x *= inv; y *= inv; z *= inv; }
         public static float Dot(Vector3 u, Vector3 v)
         {
             return u.x * v.x + u.y * v.y + u.z * v.z;
@@ -126,10 +126,10 @@ namespace RayTracer
         private float halfHeight;
 
         private Vector3 lightPosition = new Vector3(200f, 100f, -50f);
-        private Vector3 lightPosition2 = new Vector3(50f, -50f, 0f);
+        private Vector3 lightPosition2 = new Vector3(-100f, -100f, -50f);
         public Vector3 DiffuseLighting(Vector3 N, Vector3 L)
         {
-            return new Vector3(0f, 1f, 0f) * Math.Max(0f,Vector3.Dot(N, L));
+            return new Vector3(1f, 0f, 0f) * Math.Max(0f,Vector3.Dot(N, L));
         }
 
         public Vector3 DiffuseLighting2(Vector3 N, Vector3 L)
@@ -139,19 +139,20 @@ namespace RayTracer
 
         public Vector3 Trace(Ray ray, Sphere sphere)
         {
-            Vector3 ambient = new Vector3(0f, 0f, 1f);
+            Vector3 ambient = new Vector3(0f, 0f, 0f);
             Hit hit = new Hit();
 
             if(sphere.Intersect(ray, ref hit, 0.001f))
             {
+                
                 Vector3 lightDir = lightPosition - hit.point;
                 lightDir.Normalize();
                 float attenuation = 1f / (lightDir.length * lightDir.length);
-
+                
                 Vector3 lightDir2 = lightPosition2 - hit.point;
                 lightDir2.Normalize();
                 float attenuation2 = 1f / (lightDir2.length * lightDir2.length);
-
+                
                 return attenuation * DiffuseLighting(hit.normal, lightDir) + attenuation2 * DiffuseLighting2(hit.normal, lightDir2);
             }
 
