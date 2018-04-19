@@ -120,7 +120,37 @@ namespace RayTracer
 
         public override bool Intersect(Ray ray, ref Hit hit, float tmin = 0, float tmax = float.MaxValue)
         {
-            return false;
+            //const float EPSILON = 0.0000001f;
+            //Vector3 vertex0 = p1;
+            //Vector3 vertex1 = p2;
+            //Vector3 vertex2 = p3;
+            //Vector3 rayVector = ray.direction;
+            //Vector3 edge1, edge2, h, s, q;
+            //float a, f, u, v;
+            //edge1 = vertex1 - vertex0;
+            //edge2 = vertex2 - vertex0;
+            //h = rayVector.crossProduct(edge2);
+            //a = edge1.dotProduct(h);
+            //if (a > -EPSILON && a < EPSILON)
+            //    return false;
+            //f = 1 / a;
+            //s = rayOrigin - vertex0;
+            //u = f * (s.dotProduct(h));
+            //if (u < 0.0 || u > 1.0)
+            //    return false;
+            //q = s.crossProduct(edge1);
+            //v = f * rayVector.dotProduct(q);
+            //if (v < 0.0 || u + v > 1.0)
+            //    return false;
+            //// At this stage we can compute t to find out where the intersection point is on the line.
+            //float t = f * edge2.dotProduct(q);
+            //if (t > EPSILON) // ray intersection
+            //{
+            //    outIntersectionPoint = rayOrigin + rayVector * t;
+            //    return true;
+            //}
+            //else // This means that there is a line intersection but not a ray intersection.
+                return false;
         }
     }
 
@@ -129,7 +159,7 @@ namespace RayTracer
         public Vector3 color;
         public float ambiante, diffuse, speculaire;
         
-        public Material(Vector3 aColor, float anAmbiante = 0.4f, float aDiffuse=1f, float aSpeculaire=1f)
+        public Material(Vector3 aColor, float anAmbiante = 0.4f, float aDiffuse=1f, float aSpeculaire=20f)
         {
             color = aColor;
             ambiante = anAmbiante;
@@ -273,9 +303,9 @@ namespace RayTracer
                     Hit hit = new Hit();
                     if(obj.Intersect(ray, ref hit, 0.001f))
                     {
-                        float distance = (hit.point.x - l.point.x) * (hit.point.x - l.point.x) +
-                            (hit.point.y - l.point.y) * (hit.point.y - l.point.y) +
-                            (hit.point.z - l.point.z) * (hit.point.z - l.point.z);
+                        float distance = (hit.point.x - ray.origin.x) * (hit.point.x - ray.origin.x) +
+                            (hit.point.y - ray.origin.y) * (hit.point.y - ray.origin.y) +
+                            (hit.point.z - ray.origin.z) * (hit.point.z - ray.origin.z);
 
                         int i=0;
                         for (; i < distances.Count && distances[i] < distance; i++) ;
@@ -305,21 +335,24 @@ namespace RayTracer
                         color += attenuation * l.color * Math.Max(0f, Vector3.Dot(hit.normal, lightDir)) * mat.color * mat.diffuse;
 
                     }
-                    //if (l.mode == Light.LIGHT_MODE.SPECULAIRE || l.mode == Light.LIGHT_MODE.PHONG)
-                    //{
-                    //    Vector3 lightDir = l.point - hit.point;
-                    //    lightDir.Normalize();
-                    //    V = Vector.fromPoint(p, position, True)
-                    //    R = N * 2 * Vector3.Dot(hit.normal, lightDir) - L
-                    //    intensite = (R * V) * *sphereMin.speculaire * light.intensite
-                    //    if intensite > 0:
-                    //        self.buffer[i, j] = Color.addition(self.buffer[i, j], light.color, intensite)
+                    if (l.mode == Light.LIGHT_MODE.SPECULAIRE || l.mode == Light.LIGHT_MODE.PHONG)
+                    {
+                        Vector3 lightDir = l.point - hit.point;
+                        lightDir.Normalize();
 
-                    //}
+                        Vector3 V = ray.origin - hit.point;
+                        V.Normalize();
+
+                        Vector3 R = hit.normal * 2 * Vector3.Dot(lightDir, hit.normal) - lightDir;
+                        float intensite = (float) Math.Pow(Vector3.Dot(V, R), mat.speculaire * l.intensite);
+                        //if (intensite > 0)
+                        //    color += l.color * intensite;
+
+                    }
                     break;
                 }
 
-                
+
             }
 
             //if (sphere.Intersect(ray, ref hit, 0.001f))
@@ -374,11 +407,11 @@ namespace RayTracer
             Vector3 yInc = (V * (2f * invHeight)) * angle;
             
             List<AbstractObject> obj = new List<AbstractObject>();
-            obj.Add(new Sphere(new Vector3(0f, 0f, 9f), 0.3f, new Material(new Vector3(0, 0, 1f))));
             obj.Add(new Sphere(new Vector3(0f, 0f, 10f), 1f, new Material(new Vector3(1, 0, 0))));
+            obj.Add(new Sphere(new Vector3(0f, 0f, 9f), .3f, new Material(new Vector3(0, 0, 1))));
 
             List<Light> lights = new List<Light>();
-            lights.Add(new Light(new Vector3(10f, 0f, 0f), new Vector3(1f, 1f, 1f), 1, Light.LIGHT_MODE.PHONG));
+            lights.Add(new Light(new Vector3(10f, 0f, 10f), new Vector3(1f, 1f, 1f), 1, Light.LIGHT_MODE.PHONG));
             //lights.Add(new Light(new Vector3(0f, 0f, 0f), new Vector3(1f, 0f, 1f)));
 
 
